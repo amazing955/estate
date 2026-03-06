@@ -9,6 +9,11 @@ if (!AuthController::check() || $_SESSION['role'] !== 'owner') {
     exit;
 }
 
+// Check for session timeout
+if (!AuthController::checkSessionTimeout()) {
+    // This will redirect to timeout page if session expired
+}
+
 $propCtrl = new PropertyController();
 $inqCtrl = new InquiryController();
 $notifCtrl = new NotificationController();
@@ -35,8 +40,11 @@ $totalNotifications = count($notifications);
 </div>
 
 <div class="col text-end">
-<a href="/estate/views/create_property.php" class="btn btn-primary btn-lg shadow">
+<a href="/estate/views/create_property.php" class="btn btn-primary btn-lg shadow me-2">
 ➕ Add Property
+</a>
+<a href="/estate/views/create_advert.php" class="btn btn-success btn-lg shadow">
+📢 Create Advert
 </a>
 </div>
 </div>
@@ -218,6 +226,38 @@ Delete
 </div>
 
 <script>
+// Session activity tracking for timeout
+let activityTimeout;
+function resetActivityTimeout() {
+    clearTimeout(activityTimeout);
+    activityTimeout = setTimeout(() => {
+        window.location.href = '/estate/views/timeout.php';
+    }, 180000); // 3 minutes = 180000 milliseconds
+}
+
+function updateSessionActivity() {
+    fetch('/estate/controllers/index.php?action=updateActivity', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'update_activity=1'
+    }).catch(error => {
+        console.error('Error updating session activity:', error);
+    });
+}
+
+// Track user activity
+['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(event => {
+    document.addEventListener(event, () => {
+        resetActivityTimeout();
+        updateSessionActivity();
+    }, true);
+});
+
+// Initialize activity timeout
+resetActivityTimeout();
+
 // refresh owner dashboard every 5 seconds
 setInterval(() => { window.location.reload(); }, 5000);
 </script>

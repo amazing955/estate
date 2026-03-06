@@ -11,8 +11,7 @@ $advCtrl = new AdvertController();
 $message = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['approve_id'])) {
-        $expiry_date = $_POST['expiry_date_' . $_POST['approve_id']] ?? null;
-        if ($advCtrl->approve($_POST['approve_id'], $expiry_date)) {
+        if ($advCtrl->approve($_POST['approve_id'])) {
             $message = 'Advert approved!';
         }
     } elseif (isset($_POST['reject_id'])) {
@@ -25,6 +24,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 }
+
 $pending = $advCtrl->getPending();
 $approved = array_filter($advCtrl->all(), fn($a) => $a['is_approved'] == 1);
 ?>
@@ -51,9 +51,8 @@ $approved = array_filter($advCtrl->all(), fn($a) => $a['is_approved'] == 1);
     <tr>
         <th>Title</th>
         <th>Submitted By</th>
-        <th>Telephone</th>
         <th>Position</th>
-        <th>Expiry Date</th>
+        <th>Expires</th>
         <th>Actions</th>
     </tr>
     </thead>
@@ -62,16 +61,12 @@ $approved = array_filter($advCtrl->all(), fn($a) => $a['is_approved'] == 1);
     <tr>
         <td><?=htmlspecialchars($p['title'])?></td>
         <td><?=htmlspecialchars($p['username'] ?? 'Unknown')?></td>
-        <td><?=htmlspecialchars($p['telephone'] ?? 'N/A')?></td>
         <td><?=htmlspecialchars($p['position'])?></td>
-        <td>
-            <input type="date" id="expiry_<?=$p['id']?>" class="form-control form-control-sm" value="<?=htmlspecialchars($p['expiry_date'] ?? '')?>">
-        </td>
+        <td><?=htmlspecialchars($p['expiry_date'] ?? 'No expiry')?></td>
         <td>
             <form method="post" style="display:inline;">
                 <input type="hidden" name="approve_id" value="<?=$p['id']?>">
-                <input type="hidden" id="exp_field_<?=$p['id']?>" name="expiry_date_<?=$p['id']?>" value="<?=htmlspecialchars($p['expiry_date'] ?? '')?>">
-                <button class="btn btn-sm btn-success" type="button" onclick="document.getElementById('exp_field_<?=$p['id']?>').value = document.getElementById('expiry_<?=$p['id']?>').value; this.closest('form').submit();">Approve</button>
+                <button class="btn btn-sm btn-success">Approve</button>
             </form>
             <form method="post" style="display:inline;">
                 <input type="hidden" name="reject_id" value="<?=$p['id']?>">
@@ -102,7 +97,6 @@ $approved = array_filter($advCtrl->all(), fn($a) => $a['is_approved'] == 1);
     <tr>
         <th>Title</th>
         <th>Submitted By</th>
-        <th>Telephone</th>
         <th>Position</th>
         <th>Expires</th>
         <th>Actions</th>
@@ -113,7 +107,6 @@ $approved = array_filter($advCtrl->all(), fn($a) => $a['is_approved'] == 1);
     <tr>
         <td><?=htmlspecialchars($a['title'])?></td>
         <td><?=htmlspecialchars($a['username'] ?? 'Admin')?></td>
-        <td><?=htmlspecialchars($a['telephone'] ?? 'N/A')?></td>
         <td><?=htmlspecialchars($a['position'])?></td>
         <td><?=htmlspecialchars($a['expiry_date'] ?? 'No expiry')?></td>
         <td>

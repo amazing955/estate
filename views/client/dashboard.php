@@ -11,6 +11,11 @@ if (!AuthController::check() || $_SESSION['role'] !== 'client') {
     exit;
 }
 
+// Check for session timeout
+if (!AuthController::checkSessionTimeout()) {
+    // This will redirect to timeout page if session expired
+}
+
 $propCtrl = new PropertyController();
 $allProperties = $propCtrl->listAll();
 
@@ -367,6 +372,38 @@ if(adverts.length){
         }
     }, 120000);
 }
+
+// Session activity tracking for timeout
+let activityTimeout;
+function resetActivityTimeout() {
+    clearTimeout(activityTimeout);
+    activityTimeout = setTimeout(() => {
+        window.location.href = '/estate/views/timeout.php';
+    }, 180000); // 3 minutes = 180000 milliseconds
+}
+
+function updateSessionActivity() {
+    fetch('/estate/controllers/index.php?action=updateActivity', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'update_activity=1'
+    }).catch(error => {
+        console.error('Error updating session activity:', error);
+    });
+}
+
+// Track user activity
+['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(event => {
+    document.addEventListener(event, () => {
+        resetActivityTimeout();
+        updateSessionActivity();
+    }, true);
+});
+
+// Initialize activity timeout
+resetActivityTimeout();
 </script>
 <?php endif; ?>
 

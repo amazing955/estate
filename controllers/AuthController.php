@@ -59,6 +59,7 @@ class AuthController {
             $_SESSION['user_id'] = $user['id'];
             $_SESSION['role'] = $user['role'];
             $_SESSION['username'] = $user['username'];
+            $_SESSION['last_activity'] = time(); // Track session start time
             if (!empty($user['profile_pic'])) {
                 $_SESSION['profile_pic'] = $user['profile_pic'];
             }
@@ -92,5 +93,48 @@ class AuthController {
 
     public static function isAdmin() {
         return self::check() && $_SESSION['role'] === 'admin';
+    }
+
+    /**
+     * Check if session has timed out (3 minutes = 180 seconds)
+     */
+    public static function checkSessionTimeout() {
+        if (!self::check()) {
+            return false;
+        }
+
+        $timeout = 180; // 3 minutes in seconds
+        if (isset($_SESSION['last_activity']) && (time() - $_SESSION['last_activity']) > $timeout) {
+            // Session has expired
+            self::forceLogout();
+            return false;
+        }
+
+        // Update last activity time
+        $_SESSION['last_activity'] = time();
+        return true;
+    }
+
+    /**
+     * Force logout and redirect to timeout page
+     */
+    public static function forceLogout() {
+        if (isset($_SESSION['user_id'])) {
+            $log = new UserLog();
+            $log->add($_SESSION['user_id'], 'timeout_logout');
+        }
+        session_unset();
+        session_destroy();
+        header('Location: /estate/views/timeout.php');
+        exit;
+    }
+
+    /**
+     * Update session activity (call this on user interactions)
+     */
+    public static function updateActivity() {
+        if (self::check()) {
+            $_SESSION['last_activity'] = time();
+        }
     }
 }

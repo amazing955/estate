@@ -10,6 +10,11 @@ if (!AuthController::check() || $_SESSION['role'] !== 'admin') {
     exit;
 }
 
+// Check for session timeout
+if (!AuthController::checkSessionTimeout()) {
+    // This will redirect to timeout page if session expired
+}
+
 $propModel = new Property();
 $userModel = new User();
 $inquiryModel = new Inquiry();
@@ -22,6 +27,10 @@ $owners = array_filter($allUsers, fn($u)=>$u['role']==='owner');
 $brokers = array_filter($allUsers, fn($u)=>$u['role']==='broker');
 $clients = array_filter($allUsers, fn($u)=>$u['role']==='client');
 $admins = array_filter($allUsers, fn($u)=>$u['role']==='admin');
+
+// Limit initial display to 5 properties
+$displayProperties = array_slice($allProperties, 0, 5);
+$hasMoreProperties = count($allProperties) > 5;
 
 //$notifications = $notifModel->findByUser($_SESSION['user_id']);
 ?>
@@ -177,8 +186,11 @@ Mark Read
     <a href="system_logs.php" class="btn btn-secondary btn-lg shadow mr-2">
         System Logs
     </a>
-    <a href="inquiries.php" class="btn btn-secondary btn-lg shadow">
+    <a href="inquiries.php" class="btn btn-secondary btn-lg shadow mr-2">
         View Inquiries
+    </a>
+    <a href="send_message.php" class="btn btn-success btn-lg shadow">
+        Send Message to Users
     </a>
 </div>
 
@@ -206,9 +218,9 @@ All Property Listings
 
 </thead>
 
-<tbody>
+<tbody id="propertiesTableBody">
 
-<?php foreach($allProperties as $p): ?>
+<?php foreach($displayProperties as $p): ?>
 
 <tr>
 
@@ -242,6 +254,12 @@ Delete
 
 </table>
 
+<?php if($hasMoreProperties): ?>
+<div class="text-center mt-3">
+<button id="viewMoreBtn" class="btn btn-primary" onclick="loadMoreProperties()">View More Properties</button>
+</div>
+<?php endif; ?>
+
 </div>
 
 </div>
@@ -249,6 +267,77 @@ Delete
 </div>
 
 <script>
+function loadMoreProperties() {
+    const btn = document.getElementById('viewMoreBtn');
+    btn.disabled = true;
+    btn.innerHTML = 'Loading...';
+
+    fetch('/estate/controllers/index.php?action=getMoreProperties&offset=5&getAll=true')
+        .then(response => response.json())
+        .then(data => {
+            if (data.properties && data.properties.length > 0) {
+                const tbody = document.getElementById('propertiesTableBody');
+                data.properties.forEach(p => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${p.id}</td>
+                        <td>${p.title.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</td>
+                        <td>${p.owner_id}</td>
+                        <td><span class="badge bg-success">${p.status.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</span></td>
+                        <td>
+                            <a href="/estate/controllers/index.php?action=deleteProperty&id=${p.id}" 
+                               class="btn btn-sm btn-danger"
+                               onclick="return confirm('Delete this property?');">
+                               Delete
+                            </a>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                btn.style.display = 'none';
+            } else {
+                btn.style.display = 'none';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading more properties:', error);
+            btn.disabled = false;
+            btn.innerHTML = 'View More Properties';
+        });
+}
+
+// Session activity tracking for timeout
+let activityTimeout;
+function resetActivityTimeout() {
+    clearTimeout(activityTimeout);
+    activityTimeout = setTimeout(() => {
+        window.location.href = '/estate/views/timeout.php';
+    }, 180000); // 3 minutes = 180000 milliseconds
+}
+
+function updateSessionActivity() {
+    fetch('/estate/controllers/index.php?action=updateActivity', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: 'update_activity=1'
+    }).catch(error => {
+        console.error('Error updating session activity:', error);
+    });
+}
+
+// Track user activity
+['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(event => {
+    document.addEventListener(event, () => {
+        resetActivityTimeout();
+        updateSessionActivity();
+    }, true);
+});
+
+// Initialize activity timeout
+resetActivityTimeout();
+
 // auto-refresh admin dashboard every 5 seconds
 setInterval(() => { window.location.reload(); }, 5000);
 </script>
