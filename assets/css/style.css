@@ -1,0 +1,42 @@
+/* assets/css/style.css */
+body {
+    background-color: #f8f9fa;
+}
+.card:hover {
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* property listing adjustments (only on listing pages) */
+.dashboard-wrapper .property-card,
+.home-listing .property-card {
+    max-width: 100%;
+}
+.dashboard-wrapper .property-card .card-img-top,
+.home-listing .property-card .card-img-top {
+    height: 150px;
+    object-fit: cover;
+}
+
+/* smaller text for listing cards */
+.dashboard-wrapper .property-card .card-body,
+.home-listing .property-card .card-body {
+    padding: 0.75rem;
+}
+.dashboard-wrapper .property-card .card-title,
+.home-listing .property-card .card-title {
+    font-size: 1rem;
+}
+.dashboard-wrapper .property-card .text-muted,
+.home-listing .property-card .text-muted {
+    font-size: 0.85rem;
+}
+
+/* hero section used by client dashboard */
+.hero {
+    background: linear-gradient(rgba(0,0,0,0.6),rgba(0,0,0,0.6)), url('/estate/assets/images/hero.jpg') center/cover no-repeat;
+    background-size: cover;
+    padding: 80px 0;
+    color: white;
+    text-align: center;
+}
+
