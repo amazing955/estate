@@ -49,4 +49,27 @@ class NotificationController {
             }
         }
         return $count;
+    }
+
+    /**
+     * Send a simple email notification to a user.
+     * The system uses PHP's mail() function; ensure your server is configured correctly.
+     * @param int $user_id
+     * @param string $subject
+     * @param string $message
+     * @return bool true if mail() returned true, false otherwise
+     */
+    public function sendEmail($user_id, $subject, $message) {
+        require_once __DIR__ . '/../models/User.php';
+        $userModel = new User();
+        $user = $userModel->findById($user_id);
+        if (!$user || empty($user['email'])) {
+            return false;
+        }
+        $to = $user['email'];
+        // use fixed system sender
+        $fromAddress = 'clintonatulinde@gmail.com';
+        $headers = "From: {$fromAddress}\r\n" .
+                   "Content-Type: text/plain; charset=UTF-8\r\n";
+        return mail($to, $subject, $message, $headers);
     }}

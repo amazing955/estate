@@ -35,6 +35,15 @@ class AdvertController {
                     require_once __DIR__ . '/UserController.php';
                     $uc = new UserController();
                     $uc->addSystemLog('advert', "User {$user_id} submitted advert '{$title}' for approval");
+                    // email actor if appropriate
+                    $role = $_SESSION['role'] ?? '';
+                    if (in_array($role, ['admin','owner','broker'])) {
+                        require_once __DIR__ . '/NotificationController.php';
+                        $nc = new NotificationController();
+                        $nc->sendEmail($user_id,
+                            'Dashboard Update – Advert Submitted',
+                            "Your advert titled '{$title}' has been submitted successfully.");
+                    }
                 }
                 return $res;
             }
@@ -48,6 +57,15 @@ class AdvertController {
             require_once __DIR__ . '/UserController.php';
             $uc = new UserController();
             $uc->addSystemLog('advert', "Admin {$_SESSION['user_id']} approved advert {$id}");
+            // notify admin by email as well
+            $role = $_SESSION['role'] ?? '';
+            if (in_array($role, ['admin','owner','broker'])) {
+                require_once __DIR__ . '/NotificationController.php';
+                $nc = new NotificationController();
+                $nc->sendEmail($_SESSION['user_id'],
+                    'Dashboard Update – Advert Approved',
+                    "You have approved advert ID {$id}.");
+            }
         }
         return $res;
     }
@@ -58,6 +76,15 @@ class AdvertController {
             require_once __DIR__ . '/UserController.php';
             $uc = new UserController();
             $uc->addSystemLog('advert', "Admin {$_SESSION['user_id']} rejected advert {$id}");
+            // also email
+            $role = $_SESSION['role'] ?? '';
+            if (in_array($role, ['admin','owner','broker'])) {
+                require_once __DIR__ . '/NotificationController.php';
+                $nc = new NotificationController();
+                $nc->sendEmail($_SESSION['user_id'],
+                    'Dashboard Update – Advert Rejected',
+                    "You have rejected advert ID {$id}.");
+            }
         }
         return $res;
     }

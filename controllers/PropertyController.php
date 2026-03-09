@@ -42,6 +42,15 @@ class PropertyController {
             require_once __DIR__ . '/UserController.php';
             $uc = new UserController();
             $uc->addSystemLog('property', "User {$owner_id} created property {$property_id}");
+            // send email to actor if they have a privileged role
+            $role = $_SESSION['role'] ?? '';
+            if (in_array($role, ['admin','owner','broker'])) {
+                require_once __DIR__ . '/NotificationController.php';
+                $nc = new NotificationController();
+                $nc->sendEmail($owner_id,
+                    'Dashboard Update – Property Created',
+                    "You have successfully created a new property (ID {$property_id}).");
+            }
         }
 
         if (!$property_id) {
@@ -120,6 +129,15 @@ class PropertyController {
         require_once __DIR__ . '/UserController.php';
         $uc = new UserController();
         $uc->addSystemLog('property', "User {$_SESSION['user_id']} updated property {$id}");
+        // also email the user notifying them of the update
+        $role = $_SESSION['role'] ?? '';
+        if (in_array($role, ['admin','owner','broker'])) {
+            require_once __DIR__ . '/NotificationController.php';
+            $nc = new NotificationController();
+            $nc->sendEmail($_SESSION['user_id'],
+                'Dashboard Update – Property Updated',
+                "Your property (ID {$id}) was updated successfully.");
+        }
         if (!empty($files['images']['name'][0])) {
             $this->uploadImages($id, $files['images']);
         }

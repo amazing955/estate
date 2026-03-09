@@ -33,6 +33,15 @@ class CollaborationController {
             require_once __DIR__ . '/UserController.php';
             $uc = new UserController();
             $uc->addSystemLog('collaboration', "Broker {$broker['username']} requested collaboration with owner {$owner_id}");
+            // email broker about request success
+            $role = $_SESSION['role'] ?? '';
+            if (in_array($role, ['admin','owner','broker'])) {
+                require_once __DIR__ . '/NotificationController.php';
+                $nc = new NotificationController();
+                $nc->sendEmail($broker_id,
+                    'Dashboard Update – Collaboration Requested',
+                    "Your collaboration request to owner ID {$owner_id} has been sent.");
+            }
         }
         return $ok;
     }
@@ -56,6 +65,15 @@ class CollaborationController {
         require_once __DIR__ . '/UserController.php';
         $uc = new UserController();
         $uc->addSystemLog('collaboration', "Owner {$owner['username']} {$status} request from broker {$broker['username']}");
+        // email owner about the response action
+        $role = $_SESSION['role'] ?? '';
+        if (in_array($role, ['admin','owner','broker'])) {
+            require_once __DIR__ . '/NotificationController.php';
+            $nc = new NotificationController();
+            $nc->sendEmail($_SESSION['user_id'],
+                'Dashboard Update – Collaboration ' . ucfirst($status),
+                "You have {$status} the collaboration request from broker {$broker['username']}.");
+        }
         return true;
     }
 

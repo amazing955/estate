@@ -12,6 +12,7 @@ This is a simple real-estate management application built with pure PHP (MVC sty
 - **Advert module**: admin can upload adverts with positions and expiry dates.
 - **Dashboards** customized by role.
 - Owners receive actionable notifications with a "Track Sale" button to reserve or sell a property.
+- Admins, owners, and brokers receive an email from the system whenever they make an update via their dashboard (e.g. property or profile changes).
 - Clients can rate properties and book site tours directly from their dashboard, with dedicated forms and database records.
 - **Secure file uploads** and PDO prepared statements.
 - **Modern responsive UI** using Bootstrap.

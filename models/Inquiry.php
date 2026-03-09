@@ -27,7 +27,9 @@ class Inquiry extends Model {
     }
 
     public function findByClient($client_id) {
-        $sql = "SELECT * FROM inquiries WHERE client_id = :client_id";
+        $sql = "SELECT i.*, p.title as property_title FROM inquiries i
+                JOIN properties p ON i.property_id = p.id
+                WHERE i.client_id = :client_id";
         $stmt = $this->conn->prepare($sql);
         $stmt->execute([':client_id' => $client_id]);
         return $stmt->fetchAll(PDO::FETCH_ASSOC);

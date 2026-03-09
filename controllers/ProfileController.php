@@ -52,6 +52,15 @@ class ProfileController {
                 if (isset($updates['email'])) {
                     $_SESSION['email'] = $updates['email'];
                 }
+                // email notification for privileged roles
+                $role = $_SESSION['role'] ?? '';
+                if (in_array($role, ['admin','owner','broker'])) {
+                    require_once __DIR__ . '/NotificationController.php';
+                    $nc = new NotificationController();
+                    $nc->sendEmail($id,
+                        'Dashboard Update – Profile Changed',
+                        "Your profile information was updated successfully.");
+                }
             }
             return $success;
         }

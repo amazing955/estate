@@ -30,16 +30,22 @@ class InquiryController {
         // notify owner and admin
         $property = $this->propertyModel->findById($property_id);
         $owner_id = $property['owner_id'];
-        $client = htmlspecialchars($_SESSION['username']);
-        $msg = "Client {$client} is interested in your property: " . htmlspecialchars($property['title']);
+        $clientName = htmlspecialchars($_SESSION['username']);
+        $clientEmail = htmlspecialchars($_SESSION['email'] ?? '');
+        $msg = "Client {$clientName} ({$clientEmail}) is interested in your property: " . htmlspecialchars($property['title']);
         // if this property was reposted, include submit-to-owner link for broker
         if (!empty($property['original_owner_id']) && $property['original_owner_id'] != $owner_id) {
             $link = "/estate/controllers/index.php?action=submitToOwner&type=inquiry&property_id={$property_id}&inq_id=" . $this->inquiryModel->getLastInsertId();
             $msg .= " <a href='{$link}' class='btn btn-sm btn-secondary'>Submit to Owner</a>";
         }
         $this->notificationModel->create($owner_id, $msg, $property_id);
+        // email owner with the same message
+        require_once __DIR__ . '/NotificationController.php';
+        $nc = new NotificationController();
+        $nc->sendEmail($owner_id, 'New Inquiry Received', $msg);
         // admin notification
         $this->notificationModel->create(1, "{$msg} (owner id {$owner_id})", $property_id);
+        $nc->sendEmail(1, 'New Inquiry (admin copy)', "{$msg} (owner id {$owner_id})");
         return true;
     }
 
