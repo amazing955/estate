@@ -32,7 +32,10 @@ $admins = array_filter($allUsers, fn($u)=>$u['role']==='admin');
 $displayProperties = array_slice($allProperties, 0, 5);
 $hasMoreProperties = count($allProperties) > 5;
 
-//$notifications = $notifModel->findByUser($_SESSION['user_id']);
+// fetch notifications for this admin
+$notifications = $notifModel->findByUser($_SESSION['user_id']);
+$unreadNotifications = array_filter($notifications, fn($n)=>!$n['is_read']);
+$unreadCount = count($unreadNotifications);
 ?>
 
 <?php include __DIR__ . '/../header.php'; ?>
@@ -131,34 +134,30 @@ Admins
 <div class="card shadow">
 
 <div class="card-header bg-primary text-white">
-Notifications
+New Notifications
 </div>
 
 <div class="card-body">
 
-<?php if(empty($notifications)): ?>
+<?php if($unreadCount === 0): ?>
 
-<p>No notifications</p>
+<p>No new notifications</p>
 
 <?php else: ?>
 
 <ul class="list-group">
 
-<?php foreach ($notifications as $n): ?>
+<?php foreach ($unreadNotifications as $n): ?>
 
 <li class="list-group-item d-flex justify-content-between">
-
-<?=htmlspecialchars($n['message'])?>
-
-<?php if(!$n['is_read']): ?>
-
-<a href="/estate/controllers/index.php?action=markNotificationRead&id=<?=$n['id']?>" 
-class="btn btn-sm btn-success">
-Mark Read
-</a>
-
-<?php endif; ?>
-
+    <div>
+        <?=htmlspecialchars($n['message'])?>
+        <span class="badge bg-danger ms-2">New</span>
+    </div>
+    <a href="/estate/controllers/index.php?action=markNotificationRead&id=<?=$n['id']?>" 
+       class="btn btn-sm btn-success">
+       Mark Read
+    </a>
 </li>
 
 <?php endforeach; ?>
@@ -267,12 +266,14 @@ Delete
 </div>
 
 <script>
+let offset = <?=count($displayProperties)?>; // number of rows already shown
+
 function loadMoreProperties() {
     const btn = document.getElementById('viewMoreBtn');
     btn.disabled = true;
     btn.innerHTML = 'Loading...';
 
-    fetch('/estate/controllers/index.php?action=getMoreProperties&offset=5&getAll=true')
+    fetch(`/estate/controllers/index.php?action=getMoreProperties&offset=${offset}&getAll=true`)
         .then(response => response.json())
         .then(data => {
             if (data.properties && data.properties.length > 0) {
@@ -294,7 +295,13 @@ function loadMoreProperties() {
                     `;
                     tbody.appendChild(row);
                 });
-                btn.style.display = 'none';
+                offset += data.properties.length;
+                if (!data.hasMore) {
+                    btn.style.display = 'none';
+                } else {
+                    btn.disabled = false;
+                    btn.innerHTML = 'View More Properties';
+                }
             } else {
                 btn.style.display = 'none';
             }

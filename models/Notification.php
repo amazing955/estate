@@ -31,4 +31,17 @@ class Notification extends Model {
         $stmt = $this->conn->prepare($sql);
         return $stmt->execute([':id' => $id]);
     }
+
+    /**
+     * Count unread notifications for a user.
+     * @param int $user_id
+     * @return int
+     */
+    public function unreadCount($user_id) {
+        $sql = "SELECT COUNT(*) as cnt FROM notifications WHERE user_id = :user_id AND is_read = 0";
+        $stmt = $this->conn->prepare($sql);
+        $stmt->execute([':user_id' => $user_id]);
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        return $row ? (int)$row['cnt'] : 0;
+    }
 }

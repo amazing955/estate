@@ -20,6 +20,14 @@ class NotificationController {
         return $this->notificationModel->markRead($id);
     }
 
+    /**
+     * Return count of unread notifications for a given user.
+     * @param int $user_id
+     * @return int
+     */
+    public function unreadCount($user_id) {
+        return $this->notificationModel->unreadCount($user_id);
+    }
     public function create($user_id, $message, $property_id = null) {
         return $this->notificationModel->create($user_id, $message, $property_id);
     }
@@ -71,5 +79,13 @@ class NotificationController {
         $fromAddress = 'clintonatulinde@gmail.com';
         $headers = "From: {$fromAddress}\r\n" .
                    "Content-Type: text/plain; charset=UTF-8\r\n";
-        return mail($to, $subject, $message, $headers);
+        // suppress warnings from mail() if SMTP is not configured
+        $sent = @mail($to, $subject, $message, $headers);
+        if (!$sent) {
+            // record in system log for debugging
+            require_once __DIR__ . '/UserController.php';
+            $uc = new UserController();
+            $uc->addSystemLog('email', "Failed to send notification to user {$user_id} (subject: {$subject})");
+        }
+        return $sent;
     }}

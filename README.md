@@ -13,6 +13,8 @@ This is a simple real-estate management application built with pure PHP (MVC sty
 - **Dashboards** customized by role.
 - Owners receive actionable notifications with a "Track Sale" button to reserve or sell a property.
 - Admins, owners, and brokers receive an email from the system whenever they make an update via their dashboard (e.g. property or profile changes).
+
+> **Note:** The built-in `mail()` function requires a working SMTP server. On local setups like XAMPP you will need to configure `SMTP` and `smtp_port` in `php.ini` or use a tool like `mailhog`/`smtp4dev`. Email failures are logged to the system logs.
 - Clients can rate properties and book site tours directly from their dashboard, with dedicated forms and database records.
 - **Secure file uploads** and PDO prepared statements.
 - **Modern responsive UI** using Bootstrap.

@@ -139,8 +139,12 @@ text-align:center;
 
 <div class="col-md-2">
 <button class="btn btn-warning w-100">Search</button>
+
 </div>
 
+<div class="col-md-2">
+    <a href="/estate/views/login.php" class="btn btn-warning w-100">Logout</a>
+</div>
 </form>
 </div>
 </section>
